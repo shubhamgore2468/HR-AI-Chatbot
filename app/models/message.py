@@ -8,17 +8,19 @@ from enum import Enum
 from sqlalchemy import Index
 from .base import Base
 
-
-class Sender(str, Enum):
-    user = "user"
-    agent = "agent"
-    system = "system"
+from app.schemas.enums import SessionStatus, StepName
 
 
-class Role(str, Enum):
-    user = "user"
-    assistant = "assistant"
-    system = "system"
+# class Sender(str, Enum):
+#     user = "user"
+#     agent = "agent"
+#     system = "system"
+
+
+# class Role(str, Enum):
+#     user = "user"
+#     assistant = "assistant"
+#     system = "system"
 
 class Message(Base):
     __tablename__ = "messages"

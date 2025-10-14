@@ -11,7 +11,7 @@ load_dotenv()
 
 token = os.getenv("GITHUB_ACCESS_TOKEN")
 endpoint = "https://models.github.ai/inference"
-model = "openai/gpt-5-nano"
+model = "openai/gpt-5-₹₹nano"
 
 mock_data = {
                     "roles": ["Senior Backend Engineer", "Frontend Developer"],

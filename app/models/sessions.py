@@ -7,20 +7,22 @@ from .base import Base
 import uuid
 from enum import Enum
 
+from app.schemas.enums import SessionStatus, StepName
 
 
-class SessionStatus(str, Enum):
-    active = "active"
-    archived = "archived"
-    error = "error"
+
+# class SessionStatus(str, Enum):
+#     active = "active"
+#     archived = "archived"
+#     error = "error"
 
 
-class StepName(str, Enum):
-    start = "start"
-    jd_created = "jd_created"
-    plan_created = "plan_created"
-    posted_to_notion = "posted_to_notion"
-    completed = "completed"
+# class StepName(str, Enum):
+#     start = "start"
+#     jd_created = "jd_created"
+#     plan_created = "plan_created"
+#     posted_to_notion = "posted_to_notion"
+#     completed = "completed"
 
 
 class Session(Base):

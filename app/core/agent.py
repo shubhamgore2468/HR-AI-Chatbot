@@ -5,6 +5,7 @@ import operator
 from pathlib import Path
 from utils import print_out_md
 import uuid
+from app.schemas.enums import StepName
 
 from app.core.nodes import parse_input_node, research_node, create_jd_node, create_hiring_plan_node, post_notion_node
 
@@ -16,20 +17,25 @@ class AgentState(TypedDict):
     session_id: uuid.UUID
 
 def route_next_step(state: AgentState):
-    """ Determine the next step based on the current state."""
-
-    step = state.get("current_step", "start")
-    if step == "start" or step=="clarify":
+    """Determine the next step based on the current state."""
+    
+    step = state.get("current_step", StepName.start.value)    
+    try:
+        step_enum = StepName(step)
+    except ValueError:
+        step_enum = StepName.start
+    
+    if step_enum in [StepName.start, StepName.clarify]:
         return "parse_input"
-    elif step == "research":
+    elif step_enum == StepName.research:
         return "research"
-    elif step == "create_jd":
+    elif step_enum == StepName.create_jd:
         return "create_jd"
-    elif step == "create_plan":
+    elif step_enum == StepName.create_plan:
         return "create_plan"
-    elif step == "post_notion":
+    elif step_enum == StepName.post_notion:
         return "post_notion"
-    elif step == "complete":
+    elif step_enum in [StepName.complete, StepName.completed]:
         return "end"
     
     return "end"

@@ -181,13 +181,13 @@ def chat(request: ChatRequest, db: Session = Depends(get_db)) -> ChatResponse:
             pass
 
         db.commit()
-        log.info("Chat response generated", extra={"Chat response" : response, "type": type(response)})
         response = ChatResponse(
             session_id=session_row.id,
             response=ai_response,
             current_step=StepName(session_row.current_step),
             hiring_context=_context_to_hiring_dict(ctx),
         )
+        log.info("Chat response generated", extra={"Chat response" : response, "type": type(response)})
 
         return response
 
