@@ -1,2 +1,76 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# Environment / secret files
 .env
-/.venv
+.env.* 
+secrets.json
+*.key
+*.pem
+*.crt
+
+# Byte-compiled / distribution / packaging
+build/
+dist/
+*.egg-info/
+pip-wheel-metadata/
+.wheels/
+
+# Test / coverage
+.coverage
+coverage.xml
+htmlcov/
+.pytest_cache/
+
+# Type checkers / caches
+.mypy_cache/
+.pyre/
+.pytype/
+
+# Logs
+logs/
+*.log
+
+# Database / local data (if used)
+*.sqlite3
+db.sqlite3
+data/
+
+# Docker
+docker-compose.override.yml
+.env.docker
+
+# Node / frontend (if present)
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# IDEs / editors
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# macOS / Windows
+.DS_Store
+Thumbs.db
+
+# CI / build artifacts
+coverage/
+*.retry
+
+# Keep this file tracked
+!.gitignore
+
+
+
+app/schemas

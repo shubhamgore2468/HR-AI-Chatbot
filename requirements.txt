@@ -2,3 +2,10 @@ langgraph
 langchain-core
 langchain-openai
 python-dotenv
+pydantic
+fastapi
+sqlalchemy
+uvicorn
+fastapi
+psycopg2-binary==2.9.11
+faker==37.11.0
