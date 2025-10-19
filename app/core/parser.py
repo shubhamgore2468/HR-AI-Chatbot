@@ -3,7 +3,7 @@ from pydantic import BaseModel, Field
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import JsonOutputParser
 from app.core.llm import get_llm
-
+from app.core.logger import log
 
 class HiringInfo(BaseModel):
     """Structured hiring information extracted from user input"""
@@ -46,10 +46,12 @@ def parse_hiring_request(user_input):
             "input" : user_input,
             "format_instructions" : parser.get_format_instructions()
         })
-        print(f"Parsed hiring request: {result}")
+        # print(f"Parsed hiring request: {result}")
+        log.info(f"Parsed hiring request: {result}")
         return result
     except Exception as e:
-        print(f"Error parsing hiring request: {e}")
+        # print(f"Error parsing hiring request: {e}")
+        log.info(f"Error parsing hiring request: {e}")
         return e
     
 

@@ -7,5 +7,5 @@ def save_to_markdown(content: str, filename: str):
     output_dir.mkdir(exist_ok=True)
     
     filepath = output_dir / filename
-    filepath.write_text(content, encoding="utf-8")
-    return str(filepath)
+    with filepath.open("w", encoding='utf-8') as f:
+        f.write(content)

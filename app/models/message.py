@@ -8,7 +8,7 @@ from enum import Enum
 from sqlalchemy import Index
 from .base import Base
 
-from app.schemas.enums import SessionStatus, StepName
+from app.schemas.enums import SessionStatus, StepName, Sender, Role
 
 
 # class Sender(str, Enum):

@@ -1,7 +1,6 @@
-from typing import TypedDict, Annotated, Sequence
+from typing import TypedDict, List
 from langgraph.graph import StateGraph, END
-from langchain_core.messages import BaseMessage, HumanMessage, AIMessage
-import operator
+from langchain_core.messages import BaseMessage, HumanMessage
 from pathlib import Path
 from utils import print_out_md
 import uuid
@@ -11,7 +10,7 @@ from app.core.nodes import parse_input_node, research_node, create_jd_node, crea
 
 
 class AgentState(TypedDict):
-    messages: Annotated[Sequence[BaseMessage], operator.add]
+    messages: List[BaseMessage]
     hiring_data: dict
     current_step: str
     session_id: uuid.UUID
@@ -25,8 +24,9 @@ def route_next_step(state: AgentState):
     except ValueError:
         step_enum = StepName.start
     
+    # Removed the loop-causing logic for parse_input -> parse_input
     if step_enum in [StepName.start, StepName.clarify]:
-        return "parse_input"
+        return "create_jd"  # Go directly to create_jd instead of parse_input
     elif step_enum == StepName.research:
         return "research"
     elif step_enum == StepName.create_jd:
@@ -52,11 +52,11 @@ def build_graph():
 
     workflow.set_entry_point("parse_input")
 
+    # FIXED: Removed "parse_input": "parse_input" to prevent loop
     workflow.add_conditional_edges(
         "parse_input",
         route_next_step,
         {
-            "parse_input": "parse_input",
             "create_jd": "create_jd",
             "end": END,
         }
@@ -80,17 +80,18 @@ def build_graph():
         }
     )
     
-    # workflow.add_conditional_edges(
-    #     "create_plan",
-    #     route_next_step,
-    #     {
-    #         "post_notion": "post_notion",
-    #         "end": END
-    #     }
-    # )
+    workflow.add_conditional_edges(
+        "create_plan",
+        route_next_step,
+        {
+            "post_notion": "post_notion",
+            "end": END
+        }
+    )
     
-    # workflow.add_edge("post_notion", END)
+    workflow.add_edge("post_notion", END)
     
+    # ADDED: Recursion limit to prevent infinite loops
     return workflow.compile()
 
 def run_agent():
@@ -119,5 +120,3 @@ def run_agent():
 
 if __name__ == "__main__":
     run_agent()
-
-

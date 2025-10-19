@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import traceback
 from typing import Dict, Optional, Any, List
 from uuid import UUID, uuid4
 from datetime import datetime
@@ -114,46 +115,56 @@ def chat(request: ChatRequest, db: Session = Depends(get_db)) -> ChatResponse:
     log.info("Chat request received", extra={"session_id": str(sid), "msg_len": len(request.message), "Chat request type":type(request.message)})
     session_row = db.query(DBSession).filter(DBSession.id == sid).first()
 
-    if not session_row:
-        session_row = DBSession(
-            id=sid,
-            status=SessionStatus.active.value,
-            current_step=StepName.start.value,
-            context_json={},  # lightweight debug bag
-        )
-        db.add(session_row)
-        db.flush()  # get PK early
-
-    # 2) Load prior messages & persist the new user message BEFORE invoking agent
-    prior_msgs = _load_langchain_messages(db, session_row.id)
-    log.info("Loaded prior messages", extra={"count": len(prior_msgs), "prior_msgs" : type(prior_msgs) })
-
-    user_msg = DBMessage(
-        session_id=session_row.id,
-        sender=Sender.user.value,
-        role=Role.user.value,
-        content=request.message,
-        meta_json={},
-    )
-    db.add(user_msg)
-    db.flush()
-
-    prior_msgs.append(HumanMessage(content=request.message))
-
-    # 3) Prepare agent state from normalized DB
-    hiring_ctx = db.query(DBHiringContext).filter(DBHiringContext.session_id == session_row.id).first()
-    agent_state = {
-        "messages": prior_msgs,
-        "hiring_data": _context_to_hiring_dict(hiring_ctx),
-        "current_step": session_row.current_step,
-        "session_id": str(session_row.id),  # if your graph expects str; otherwise keep UUID
-    }
-
-    # 4) Invoke agent
     try:
+        if not session_row:
+            session_row = DBSession(
+                id=sid,
+                status=SessionStatus.active.value,
+                current_step=StepName.start.value,
+                context_json={},  # lightweight debug bag
+            )
+            db.add(session_row)
+            db.flush()  # get PK early
+
+        # 2) Load prior messages & persist the new user message BEFORE invoking agent
+        prior_msgs = _load_langchain_messages(db, session_row.id)
+        log.info("Loaded prior messages", extra={"count": len(prior_msgs), "prior_msgs" : type(prior_msgs) })
+
+        user_msg = DBMessage(
+            session_id=session_row.id,
+            sender=Sender.user.value,
+            role=Role.user.value,
+            content=request.message,
+            meta_json={},
+        )
+        db.add(user_msg)
+        db.flush()
+
+        prior_msgs.append(HumanMessage(content=request.message))
+
+        # 3) Prepare agent state from normalized DB
+        hiring_ctx = db.query(DBHiringContext).filter(DBHiringContext.session_id == session_row.id).first()
+        agent_state = {
+            "messages": prior_msgs,
+            "hiring_data": _context_to_hiring_dict(hiring_ctx),
+            "current_step": session_row.current_step,
+            "session_id": str(session_row.id),  # if your graph expects str; otherwise keep UUID
+        }
+
         result = agent.invoke(agent_state)
-        log.info("Agent invoked successfully", extra={"result_keys": list(result.keys()), "result": result, "type": type(result), "result.messages" : result.messages})
+        # print('-'*100)
+        # print(result['messages'])
+        # print('-'*100)
+        log.info("Agent invoked successfully", extra={"result_keys": list(result.keys()), "result": result, "type": type(result)})
         # 5) Extract AI response safely
+        if not isinstance(result, dict):
+            log.error("Agent result is not a dictionary", extra={"result_type": type(result), "result": result})
+            raise ValueError("Invalid agent output structure: expected a dictionary.")
+
+        if "messages" not in result or not isinstance(result["messages"], list):
+            log.error("Agent result is missing 'messages' list", extra={"result": result})
+            raise ValueError("Invalid agent output: 'messages' key is missing or not a list.")
+
         msgs = result.get("messages") or []
         ai_msgs = [m for m in msgs if isinstance(m, AIMessage)]
         ai_response = ai_msgs[-1].content if ai_msgs else "I'm processing your request..."
@@ -192,5 +203,10 @@ def chat(request: ChatRequest, db: Session = Depends(get_db)) -> ChatResponse:
         return response
 
     except Exception as e:
+        # 🔥 --- NEW: More Detailed Exception Logging --- 🔥
+        log.error(
+            f"An unhandled exception occurred in the chat endpoint for session {sid}",
+            exc_info=True  # This is crucial! It adds the full stack trace to the log.
+        )
         db.rollback()
-        raise HTTPException(status_code=500, detail=f"Agent error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"An internal error occurred: {str(e)}")

@@ -38,7 +38,7 @@ services:
       - -c
       - |
         sleep 5
-        ollama pull gpt-oss:latest
+        ollama pull tinyllama
         echo "Model pulled successfully"
     restart: "no"
 

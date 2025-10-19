@@ -1,5 +1,6 @@
 from fastapi import APIRouter
 from .chat import router as chatbot_router
+from app.core.logger import log
 # from .session import router as session_router
 
 api_router = APIRouter()
@@ -8,11 +9,11 @@ api_router = APIRouter()
 api_router.include_router(chatbot_router, prefix="/chatbot", tags=["chatbot"])
 
 @api_router.get("/health")
-async def health_check():
+def health_check():
     """Health check endpoint.
 
     Returns:
         dict: Health status information.
     """
-    print("Health check endpoint called")
+    log.info("Health check endpoint called")
     return {"status": "healthy", "version": "1.0.0"}
